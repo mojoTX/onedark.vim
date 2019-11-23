@@ -25,6 +25,7 @@ function! airline#themes#onedark#refresh()
     let s:term_white = s:colors.white.cterm
     let s:term_black = s:colors.black.cterm
     let s:term_grey = s:colors.cursor_grey.cterm
+    let s:maj_black = 234
   endif
 
   let g:airline#themes#onedark#palette = {}
@@ -35,7 +36,9 @@ function! airline#themes#onedark#refresh()
 
   let s:N1 = [ s:colors.black.gui, s:colors.green.gui, s:term_black, s:term_green ]
   let s:N2 = [ s:colors.white.gui, s:colors.visual_grey.gui, s:term_white, s:term_grey ]
+  " let s:N3 = [ s:colors.green.gui, s:colors.black.gui, s:term_green, '' ]
   let s:N3 = [ s:colors.green.gui, s:colors.black.gui, s:term_green, '' ]
+  let s:N3 = s:N1
   let g:airline#themes#onedark#palette.normal = airline#themes#generate_color_map(s:N1, s:N2, s:N3)
 
   let group = airline#themes#get_highlight('vimCommand')
