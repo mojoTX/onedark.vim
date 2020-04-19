@@ -1,22 +1,9 @@
 #!/usr/bin/env node
 
 const _ = require('lodash') // ships with termcolors; only used because of termcolors customization
-const doT = require('dot')
 const termcolors = require('termcolors')
 const { readFileSync, writeFileSync } = require('fs')
 const { resolve } = require('path')
-
-doT.templateSettings = {
-	evaluate:    /<%([\s\S]+?)%>/g,
-	interpolate: /<%=([\s\S]+?)%>/g,
-	encode:      /<%!([\s\S]+?)%>/g,
-	use:         /<%#([\s\S]+?)%>/g,
-	define:      /<%##\s*([\w.$]+)\s*(:|=)([\s\S]+?)#%>/g,
-	conditional: /<%\?(\?)?\s*([\s\S]*?)\s*%>/g,
-	iterate:     /<%~\s*(?:%>|([\s\S]+?)\s*:\s*([\w$]+)\s*(?::\s*([\w$]+))?\s*%>)/g,
-	varname: 'it',
-	strip: false, // preserve whitespace
-}
 
 const baseColors = Object.freeze({
 	red: { gui: '#E06C75', cterm: '204', cterm16: '1' }, // alternate cterm: 168
@@ -77,7 +64,7 @@ Object.keys(templateMap).forEach(templateFilename => {
 	// Compile the template
 	let template
 	try {
-		template = doT.template(templateText)
+		template = _.template(templateText)
 	} catch (e) {
 		handleError(`Error compiling template ${templatePath}`, e)
 	}
@@ -116,10 +103,17 @@ try {
 	const xresources = readFileSync(resolve(__dirname, '../term/One Dark.Xresources'), 'utf8')
 	const terminalPalette = termcolors.xresources.import(xresources)
 
-	let itermTemplate, terminalAppTemplate, alacrittyTemplate
+	let alacrittyTemplate, itermTemplate, kittyTemplate, terminalAppTemplate
 
 	// Compile custom terminal color templates based on ones that ship with termcolors
 	try {
+		alacrittyTemplate = termcolors.export(
+			readFileSync(resolve(__dirname, 'templates/One Dark.alacritty')),
+			_.partialRight(_.mapValues, function (color) {
+				return color.toHex().slice(1)
+			})
+		)
+
 		itermTemplate = termcolors.export(
 			// From termcolors/lib/formats/iterm.js
 			readFileSync(resolve(__dirname, 'templates/One Dark.itermcolors')),
@@ -128,8 +122,8 @@ try {
 			})
 		)
 
-		alacrittyTemplate = termcolors.export(
-			readFileSync(resolve(__dirname, 'templates/One Dark.alacritty')),
+		kittyTemplate = termcolors.export(
+			readFileSync(resolve(__dirname, 'templates/One Dark.kitty')),
 			_.partialRight(_.mapValues, function (color) {
 				return color.toHex().slice(1)
 			})
@@ -160,9 +154,10 @@ try {
 	}
 
 	try {
-		writeFileSync(resolve(__dirname, '../term/One Dark.itermcolors'), itermTemplate(terminalPalette))
-		writeFileSync(resolve(__dirname, '../term/One Dark.terminal'), terminalAppTemplate(terminalPalette))
 		writeFileSync(resolve(__dirname, '../term/One Dark.alacritty'), alacrittyTemplate(terminalPalette))
+		writeFileSync(resolve(__dirname, '../term/One Dark.itermcolors'), itermTemplate(terminalPalette))
+		writeFileSync(resolve(__dirname, '../term/One Dark.kitty'), kittyTemplate(terminalPalette))
+		writeFileSync(resolve(__dirname, '../term/One Dark.terminal'), terminalAppTemplate(terminalPalette))
 	} catch (e) {
 		handleError('Error writing terminal color file', e)
 	}
